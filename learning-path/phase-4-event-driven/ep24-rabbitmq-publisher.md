@@ -1,4 +1,4 @@
-# Episode 20: RabbitMQ & Event Publishing
+# Episode 24: RabbitMQ & Event Publishing
 
 ## 🎯 Tujuan
 * Menambahkan **RabbitMQ** ke Docker Compose sebagai Message Broker utama.

@@ -1,4 +1,4 @@
-# Episode 25: Graceful Shutdown di Microservices
+# Episode 31: Graceful Shutdown di Microservices
 
 ## 🎯 Tujuan
 * Memahami bahaya mematikan aplikasi secara paksa (*abrupt termination* / `kill -9`).
@@ -35,8 +35,14 @@ signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 <-quit
 ```
 
-### Step 2: Implementasi Graceful Shutdown pada Server HTTP Gin
-Buka file `wallet-service/cmd/main.go`. Ubah cara menjalankan server HTTP Gin dari `r.Run()` biasa menjadi ter-kustomisasi menggunakan `http.Server`.
+### Step 1.5: Membuat Health, Readiness, & Liveness Checks
+Dalam arsitektur microservices modern (seperti saat dideploy di Kubernetes), orkestrator perlu tahu status internal service kita untuk merouting traffic secara pintar:
+* **Liveness Check (`/live`):** Menunjukkan apakah kontainer aplikasi masih hidup. Jika endpoint ini mengembalikan error (misal karena program deadlock), Kubernetes akan merestart kontainer ini.
+* **Readiness Check (`/ready`):** Menunjukkan apakah aplikasi siap menerima traffic (koneksi database, redis, dan RabbitMQ sudah tersambung). Jika down, gateway tidak akan mengirim traffic ke kontainer ini.
+* **Health Check (`/health`):** Endpoint umum untuk melaporkan status kesehatan sistem secara keseluruhan.
+
+### Step 2: Implementasi Graceful Shutdown & Health Checks pada Server HTTP Gin
+Buka file `wallet-service/cmd/main.go`. Ubah cara menjalankan server HTTP Gin dari `r.Run()` biasa menjadi ter-kustomisasi menggunakan `http.Server` dan daftarkan endpoint monitoring di router.
 
 ```go
 package main
@@ -64,7 +70,31 @@ func main() {
 	// ... inisialisasi koneksi db, redis, rabbitmq ...
     
 	r := gin.New()
-	// ... register routes ...
+	
+	// Daftarkan Endpoint Health, Readiness, & Liveness
+	r.GET("/live", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "UP"})
+	})
+
+	r.GET("/ready", func(c *gin.Context) {
+		// Pastikan MySQL terkoneksi dengan baik
+		if err := db.PingContext(c.Request.Context()); err != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"status": "DOWN", "reason": "MySQL database not responding"})
+			return
+		}
+		// Pastikan Redis terkoneksi dengan baik
+		if err := rdb.Ping(c.Request.Context()).Err(); err != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"status": "DOWN", "reason": "Redis cache not responding"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"status": "READY"})
+	})
+
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "HEALTHY"})
+	})
+
+	// ... register business routes ...
 
 	// 1. Definisikan http.Server secara custom
 	srv := &http.Server{
@@ -134,6 +164,8 @@ func main() {
   Wallet Microservice successfully stopped.
   ```
 * [ ] Sisa request HTTP yang sedang berjalan saat sinyal diterima tetap selesai diproses dan tidak terputus paksa.
+* [ ] Endpoint `GET /health`, `GET /live`, dan `GET /ready` berhasil diakses lewat browser/Postman dan mengembalikan JSON status dengan HTTP Status 200 saat server MySQL & Redis dalam keadaan menyala.
+* [ ] Mematikan MySQL/Redis container secara sengaja menyebabkan `GET /ready` mengembalikan respons `503 Service Unavailable` dengan penjelasan kegagalan koneksi.
 
 ---
 

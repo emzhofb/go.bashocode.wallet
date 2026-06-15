@@ -56,7 +56,7 @@ var (
 ```
 
 ### Step 2: Konfigurasi Structured Logging (`internal/logger/logger.go`)
-Structured logging dengan format JSON sangat membantu tim SysOps/DevOps saat menganalisis log menggunakan log aggregator (seperti Kibana di Fase 5). Kita gunakan standard library `log/slog`.
+Structured logging dengan format JSON sangat membantu tim SysOps/DevOps saat menganalisis log menggunakan log aggregator (seperti Kibana di Fase 5). Kita gunakan standard library `log/slog`. Kita juga mendefinisikan kunci konteks untuk Request Correlation ID agar setiap log dapat dilacak per request.
 
 Buat file baru di `internal/logger/logger.go`:
 
@@ -71,6 +71,8 @@ import (
 
 var Log *slog.Logger
 
+const CorrelationIDKey = "correlation_id"
+
 func InitLogger() {
 	// Set default structured JSON handler ke stdout
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
@@ -80,17 +82,68 @@ func InitLogger() {
 	slog.SetDefault(Log)
 }
 
-// Helper untuk log dengan context (bisa dipasangkan tracing id nanti)
+// Helper untuk log dengan context yang otomatis menyertakan correlation_id jika ada
+func getLogArgs(ctx context.Context, args []any) []any {
+	if ctx != nil {
+		if cid, ok := ctx.Value(CorrelationIDKey).(string); ok {
+			return append(args, slog.String("correlation_id", cid))
+		}
+	}
+	return args
+}
+
 func Info(ctx context.Context, msg string, args ...any) {
-	Log.InfoContext(ctx, msg, args...)
+	Log.InfoContext(ctx, msg, getLogArgs(ctx, args)...)
 }
 
 func Error(ctx context.Context, msg string, args ...any) {
-	Log.ErrorContext(ctx, msg, args...)
+	Log.ErrorContext(ctx, msg, getLogArgs(ctx, args)...)
 }
 
 func Warn(ctx context.Context, msg string, args ...any) {
-	Log.WarnContext(ctx, msg, args...)
+	Log.WarnContext(ctx, msg, getLogArgs(ctx, args)...)
+}
+```
+
+### Step 2.5: Membuat Correlation ID Middleware (`internal/middleware/correlation.go`)
+Middleware ini akan mengambil header `X-Correlation-ID` dari request. Jika tidak dikirim oleh client/gateway, middleware akan menghasilkan UUID baru. ID ini kemudian ditanam di request context dan dikirim balik lewat HTTP response header.
+
+Unduh library UUID terlebih dahulu:
+```bash
+go get github.com/google/uuid
+```
+
+Buat file baru di `internal/middleware/correlation.go`:
+
+```go
+package middleware
+
+import (
+	"context"
+
+	"github.com/emzhofb/gowallet/monolith/internal/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
+
+func CorrelationID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Baca dari header request
+		corID := c.GetHeader("X-Correlation-ID")
+		if corID == "" {
+			// Generate UUID baru jika kosong
+			corID = uuid.New().String()
+		}
+
+		// Tanam di request context
+		ctx := context.WithValue(c.Request.Context(), logger.CorrelationIDKey, corID)
+		c.Request = c.Request.WithContext(ctx)
+
+		// Sertakan di header HTTP Response
+		c.Header("X-Correlation-ID", corID)
+
+		c.Next()
+	}
 }
 ```
 
@@ -240,7 +293,7 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 ```
 
 ### Step 5: Update `cmd/main.go`
-Inisialisasi Logger di awal aplikasi, dan daftarkan middleware `ErrorHandler` ke router Gin:
+Inisialisasi Logger di awal aplikasi, dan daftarkan middleware `CorrelationID` serta `ErrorHandler` ke router Gin:
 
 ```go
 package main
@@ -278,6 +331,7 @@ func main() {
 	// 2. Setup Gin Router
 	r := gin.New() // Gunakan gin.New() agar log default console gin tidak bertabrakan dengan slog
 	r.Use(gin.Recovery()) // Tangkap panic secara otomatis
+	r.Use(middleware.CorrelationID()) // Daftarkan Correlation ID middleware
 	r.Use(middleware.ErrorHandler()) // Daftarkan central error handler kita
 
 	// Routes
@@ -294,7 +348,8 @@ func main() {
 ---
 
 ## ✅ Acceptance Criteria
-* [ ] Log aplikasi di konsol tampil dalam format JSON terstruktur (mengandung parameter `"time"`, `"level"`, `"msg"`).
+* [ ] Log aplikasi di konsol tampil dalam format JSON terstruktur (mengandung parameter `"time"`, `"level"`, `"msg"`, dan `"correlation_id"`).
+* [ ] Setiap request HTTP response mengembalikan header `X-Correlation-ID` yang bernilai UUID unik.
 * [ ] Terjadi panic di dalam program tetap menghasilkan respons API yang aman (HTTP 500 JSON, bukan blank white screen).
 * [ ] Error response memiliki format standard yang konsisten (`{"success": false, "error": { "code": "...", "message": "..." } }`).
 

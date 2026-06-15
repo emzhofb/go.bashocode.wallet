@@ -1,4 +1,4 @@
-# Episode 16: Refresh Token Rotation & Token Reuse Detection
+# Episode 17: Refresh Token Rotation & Token Reuse Detection
 
 ## 🎯 Tujuan
 * Menambahkan skema migrasi tabel `refresh_tokens` untuk menyimpan riwayat dan status token.

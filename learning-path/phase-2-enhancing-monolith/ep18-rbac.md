@@ -1,4 +1,4 @@
-# Episode 17: Role-Based Access Control (RBAC)
+# Episode 18: Role-Based Access Control (RBAC)
 
 ## 🎯 Tujuan
 * Menambahkan kolom `role` pada tabel `users` untuk membedakan antara pengguna biasa (`user`) dan administrator (`admin`).

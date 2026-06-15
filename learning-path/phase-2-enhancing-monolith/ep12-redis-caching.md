@@ -1,4 +1,4 @@
-# Episode 11: Redis Caching
+# Episode 12: Redis Caching
 
 ## 🎯 Tujuan
 * Menambahkan **Redis** ke dalam Docker Compose sebagai media caching memori berkecepatan tinggi.

@@ -1,4 +1,4 @@
-# Episode 16: Memecah Auth & User Service
+# Episode 20: Memecah Auth & User Service
 
 ## 🎯 Tujuan
 * Membuat folder microservice baru bernama `auth-service` di dalam monorepo kita.

@@ -1,4 +1,4 @@
-# Episode 14: Email Verification & Forgot Password
+# Episode 15: Email Verification & Forgot Password
 
 ## 🎯 Tujuan
 * Membuat skema migrasi tabel baru `otp_codes` untuk menyimpan kode OTP keamanan.

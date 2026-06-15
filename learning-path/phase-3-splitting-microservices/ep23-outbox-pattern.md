@@ -1,4 +1,4 @@
-# Episode 19: Outbox Pattern untuk Transaksi Terdistribusi
+# Episode 23: Outbox Pattern untuk Transaksi Terdistribusi
 
 ## 🎯 Tujuan
 * Memahami tantangan **Transaksi Terdistribusi** (Distributed Transactions) dalam arsitektur microservices.

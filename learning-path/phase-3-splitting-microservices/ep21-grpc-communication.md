@@ -1,4 +1,4 @@
-# Episode 17: Komunikasi Internal gRPC
+# Episode 21: Komunikasi Internal gRPC
 
 ## 🎯 Tujuan
 * Memahami apa itu **gRPC** dan mengapa protokol ini sangat cepat untuk komunikasi antar-service internal (*low latency*).

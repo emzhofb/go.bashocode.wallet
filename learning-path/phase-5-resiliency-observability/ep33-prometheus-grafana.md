@@ -1,4 +1,4 @@
-# Episode 27: Metrics Monitoring (Prometheus & Grafana)
+# Episode 33: Metrics Monitoring (Prometheus & Grafana)
 
 ## 🎯 Tujuan
 * Memahami konsep **RED Metrics** (Rate, Error, Duration) untuk memantau kesehatan server secara statistik.

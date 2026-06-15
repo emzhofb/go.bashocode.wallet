@@ -1,4 +1,4 @@
-# Episode 18: Memecah Wallet & Ledger Service
+# Episode 22: Memecah Wallet & Ledger Service
 
 ## 🎯 Tujuan
 * Membuat folder microservice baru bernama `wallet-service` di dalam monorepo.

@@ -1,4 +1,4 @@
-# Episode 13: Background Schedulers (Cron)
+# Episode 14: Background Schedulers (Cron)
 
 ## 🎯 Tujuan
 * Mengenalkan konsep **Asynchronous Background Processing** menggunakan library cron scheduler.
@@ -68,6 +68,9 @@ func (s *Scheduler) Start() {
 	// 2. Job 2: Rekonsiliasi Saldo Harian setiap jam 02:00 pagi
 	s.cron.AddFunc("0 0 2 * * *", s.ReconcileAllBalances)
 
+	// 3. Job 3: Bersihkan Refresh Token expired setiap hari pada jam 03:00 pagi
+	s.cron.AddFunc("0 0 3 * * *", s.CleanupExpiredRefreshTokens)
+
 	s.cron.Start()
 	logger.Log.Info("Background scheduler successfully started!")
 }
@@ -78,12 +81,11 @@ func (s *Scheduler) Stop() {
 }
 ```
 
-### Step 3: Membuat Job 1 — Cleanup OTPs
+### Step 3: Membuat Job 1 — Cleanup OTPs & Job 3 — Cleanup Refresh Tokens
 Buat file baru `internal/scheduler/jobs.go` untuk menyimpan detail fungsi-fungsi job:
 
 ```go
 package scheduler
-
 import (
 	"context"
 	"time"
@@ -110,6 +112,25 @@ func (s *Scheduler) CleanupExpiredOTPs() {
 
 	rowsAffected, _ := result.RowsAffected()
 	logger.Log.InfoContext(ctx, "[Cron Job] Expired OTP cleanup finished successfully.", "deleted_rows", rowsAffected)
+}
+
+func (s *Scheduler) CleanupExpiredRefreshTokens() {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	logger.Log.InfoContext(ctx, "[Cron Job] Starting expired refresh token cleanup...")
+
+	// Hapus refresh token yang sudah expired dari database
+	query := `DELETE FROM refresh_tokens WHERE expires_at < NOW()`
+
+	result, err := s.db.ExecContext(ctx, query)
+	if err != nil {
+		logger.Warn(ctx, "[Cron Job] Bypass: Table refresh_tokens not created yet. Skipped.", "error", err.Error())
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	logger.Log.InfoContext(ctx, "[Cron Job] Expired refresh token cleanup finished successfully.", "deleted_rows", rowsAffected)
 }
 ```
 

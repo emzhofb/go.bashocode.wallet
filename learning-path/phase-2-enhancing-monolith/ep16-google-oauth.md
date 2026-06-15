@@ -1,4 +1,4 @@
-# Episode 15: Integrasi Google OAuth
+# Episode 16: Integrasi Google OAuth
 
 ## 🎯 Tujuan
 * Memahami konsep alur **OAuth 2.0** (Authorization Code Grant).

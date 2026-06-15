@@ -1,4 +1,4 @@
-# Episode 12: Rate Limiting & JWT Blacklisting
+# Episode 13: Rate Limiting & JWT Blacklisting
 
 ## 🎯 Tujuan
 * Mengamankan API dari serangan *brute force* / abuse menggunakan **Rate Limiting** berbasis Redis.

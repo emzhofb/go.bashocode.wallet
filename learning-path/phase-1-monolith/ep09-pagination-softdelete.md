@@ -35,12 +35,13 @@ func (r *mysqlUserRepository) SoftDelete(ctx context.Context, id string) error {
 }
 ```
 
-### Step 2: Menambahkan Query Params Pagination di Transaction Domain
-Kita akan membuat API untuk mengambil riwayat transaksi user. Request ini harus memuat query params:
+### Step 2: Menambahkan Query Params Pagination & Filtering di Transaction Domain
+Kita akan membuat API untuk mengambil riwayat transaksi user. Request ini harus memuat query params pagination, sorting, dan optional filtering berdasarkan status transaksi:
 * `page` (default: 1)
 * `limit` (default: 10, max: 100)
 * `sort` (default: "created_at")
 * `order` (default: "desc")
+* `status` (opsional: "success", "failed", "pending")
 
 Buat file baru untuk model pagination di `internal/transaction/model/pagination.go`:
 
@@ -48,10 +49,11 @@ Buat file baru untuk model pagination di `internal/transaction/model/pagination.
 package model
 
 type PaginationParams struct {
-	Page  int    `form:"page,default=1"`
-	Limit int    `form:"limit,default=10"`
-	Sort  string `form:"sort,default=created_at"`
-	Order string `form:"order,default=desc"`
+	Page   int    `form:"page,default=1"`
+	Limit  int    `form:"limit,default=10"`
+	Sort   string `form:"sort,default=created_at"`
+	Order  string `form:"order,default=desc"`
+	Status string `form:"status"` // Filter status opsional
 }
 
 func (p *PaginationParams) Offset() int {
@@ -72,18 +74,25 @@ type PaginatedResponse struct {
 }
 ```
 
-### Step 3: Implementasi Pagination di TransactionRepository
-Buka `internal/transaction/repository/repository.go`. Tambahkan method untuk mengambil riwayat transaksi terpaginasi:
+### Step 3: Implementasi Pagination & Filtering di TransactionRepository
+Buka `internal/transaction/repository/repository.go`. Tambahkan method untuk mengambil riwayat transaksi terpaginasi dengan filter status jika diisi:
 
 ```go
 // Tambah di interface TransactionRepository:
 // GetHistory(ctx context.Context, walletID string, params model.PaginationParams) ([]model.Transaction, int64, error)
 
 func (r *mysqlTransactionRepository) GetHistory(ctx context.Context, walletID string, params model.PaginationParams) ([]model.Transaction, int64, error) {
-	// 1. Hitung total data untuk meta pagination
-	countQuery := `SELECT COUNT(*) FROM transactions WHERE sender_wallet_id = ? OR receiver_wallet_id = ?`
+	// 1. Hitung total data untuk meta pagination (sesuai filter status jika ada)
+	countQuery := `SELECT COUNT(*) FROM transactions WHERE (sender_wallet_id = ? OR receiver_wallet_id = ?)`
 	var total int64
-	err := r.db.QueryRowContext(ctx, countQuery, walletID, walletID).Scan(&total)
+	var err error
+
+	if params.Status != "" {
+		countQuery += " AND status = ?"
+		err = r.db.QueryRowContext(ctx, countQuery, walletID, walletID, params.Status).Scan(&total)
+	} else {
+		err = r.db.QueryRowContext(ctx, countQuery, walletID, walletID).Scan(&total)
+	}
 	if err != nil {
 		return nil, 0, err
 	}
@@ -103,11 +112,16 @@ func (r *mysqlTransactionRepository) GetHistory(ctx context.Context, walletID st
 	query := `
 		SELECT id, sender_wallet_id, receiver_wallet_id, amount, description, idempotency_key, status, created_at 
 		FROM transactions 
-		WHERE sender_wallet_id = ? OR receiver_wallet_id = ? 
-		ORDER BY ` + sortColumn + ` ` + sortOrder + ` 
-		LIMIT ? OFFSET ?`
+		WHERE (sender_wallet_id = ? OR receiver_wallet_id = ?) `
 
-	rows, err := r.db.QueryContext(ctx, query, walletID, walletID, params.Limit, params.Offset())
+	var rows *sql.Rows
+	if params.Status != "" {
+		query += " AND status = ? ORDER BY " + sortColumn + " " + sortOrder + " LIMIT ? OFFSET ?"
+		rows, err = r.db.QueryContext(ctx, query, walletID, walletID, params.Status, params.Limit, params.Offset())
+	} else {
+		query += " ORDER BY " + sortColumn + " " + sortOrder + " LIMIT ? OFFSET ?"
+		rows, err = r.db.QueryContext(ctx, query, walletID, walletID, params.Limit, params.Offset())
+	}
 	if err != nil {
 		return nil, 0, err
 	}
@@ -264,6 +278,7 @@ Daftarkan handler transaksi baru di `main.go`:
 * [ ] Memanggil API `DELETE /api/v1/users/me` (opsional) sukses memperbarui kolom `deleted_at` dengan timestamp waktu sekarang di database.
 * [ ] Endpoint `GET /api/v1/users/:id` tidak lagi menampilkan user yang memiliki data `deleted_at` tidak kosong (filter logic `deleted_at IS NULL` aktif).
 * [ ] Mengakses `GET /api/v1/transactions/history?page=2&limit=5` menghasilkan list data transaksi ke-6 sampai ke-10, lengkap dengan metadata `Meta` di response JSON.
+* [ ] Mengakses `GET /api/v1/transactions/history?page=1&limit=5&status=success` sukses menyaring dan hanya menampilkan data transaksi yang memiliki status `"success"`.
 
 ---
 

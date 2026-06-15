@@ -1,4 +1,4 @@
-# Episode 15: Monorepo & API Gateway (Reverse Proxy)
+# Episode 19: Monorepo & API Gateway (Reverse Proxy)
 
 ## 🎯 Tujuan
 * Mengubah project directory kita menjadi **Monorepo** menggunakan **Go Workspaces** (`go.work`).
@@ -57,7 +57,8 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strings"
+
+	"github.com/google/uuid"
 )
 
 type ReverseProxy struct {
@@ -80,6 +81,13 @@ func NewReverseProxy(targetURL string) (*ReverseProxy, error) {
 		originalDirector(req)
 		req.Header.Set("X-Forwarded-Host", req.Header.Get("Host"))
 		req.Host = url.Host
+
+		// Inject & forward Request Correlation ID untuk distributed logging
+		corID := req.Header.Get("X-Correlation-ID")
+		if corID == "" {
+			corID = uuid.New().String()
+		}
+		req.Header.Set("X-Correlation-ID", corID)
 	}
 
 	return &ReverseProxy{
