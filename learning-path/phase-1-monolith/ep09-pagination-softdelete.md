@@ -1,8 +1,9 @@
-# Episode 9: Pagination, Sorting, & Soft Delete
+# Episode 9: Pagination, Sorting, Soft Delete, & File Upload (Avatar)
 
 ## 🎯 Tujuan
 * Mengenalkan konsep **Soft Delete** (menghapus data secara logis tanpa menghapusnya dari disk fisik).
 * Membuat fitur **Pagination** dan **Sorting** di endpoint riwayat transaksi agar respons API tetap cepat saat data sudah mencapai ribuan baris.
+* Mengimplementasikan fitur **Upload Avatar** (penyimpanan file lokal) menggunakan multipart form di Gin.
 * Menyusun standard response metadata pagination yang bersih dan informatif.
 
 ---
@@ -248,8 +249,92 @@ func (h *TransactionHandler) GetHistory(c *gin.Context) {
 }
 ```
 
+### Step 4.5: Menambahkan Fitur Upload Avatar di User Domain
+Kita akan menambahkan fungsi untuk mengunggah dan memperbarui avatar pengguna. Gambar diunggah menggunakan format request `multipart/form-data` dan disimpan di server lokal.
+
+Buka file `internal/user/repository/repository.go`. Tambahkan method `UpdateAvatar` ke interface dan implementasinya:
+```go
+// Tambah di interface UserRepository:
+// UpdateAvatar(ctx context.Context, id string, path string) error
+
+func (r *mysqlUserRepository) UpdateAvatar(ctx context.Context, id string, path string) error {
+	query := `UPDATE users SET avatar_url = ? WHERE id = ? AND deleted_at IS NULL`
+	_, err := r.db.ExecContext(ctx, query, path, id)
+	return err
+}
+```
+
+Buka `internal/user/service/service.go`. Tambahkan method `UpdateAvatar` ke interface dan implementasinya:
+```go
+// Tambah di interface UserService:
+// UpdateAvatar(ctx context.Context, id string, path string) error
+
+func (s *userService) UpdateAvatar(ctx context.Context, id string, path string) error {
+	return s.repo.UpdateAvatar(ctx, id, path)
+}
+```
+
+Buka file handler `internal/user/handler/handler.go` dan tambahkan method `UploadAvatar`:
+```go
+import (
+	"os"
+	"path/filepath"
+)
+
+func (h *UserHandler) UploadAvatar(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+
+	// 1. Ambil file dari request multipart/form-data
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		c.Error(customErr.NewAppError(http.StatusBadRequest, "INVALID_FILE", "File avatar tidak ditemukan."))
+		return
+	}
+
+	// 2. Validasi ukuran file (misal maksimal 2MB)
+	if file.Size > 2*1024*1024 {
+		c.Error(customErr.NewAppError(http.StatusBadRequest, "FILE_TOO_LARGE", "Ukuran file maksimal adalah 2MB."))
+		return
+	}
+
+	// 3. Validasi tipe file extension secara sederhana
+	ext := filepath.Ext(file.Filename)
+	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" {
+		c.Error(customErr.NewAppError(http.StatusBadRequest, "INVALID_EXTENSION", "Format file harus JPG, JPEG, atau PNG."))
+		return
+	}
+
+	// 4. Tentukan folder penyimpanan lokal
+	uploadDir := "./uploads"
+	_ = os.MkdirAll(uploadDir, os.ModePerm)
+
+	// Beri nama file unik berdasarkan User ID agar tidak bentrok
+	filename := userID.(string) + ext
+	dst := filepath.Join(uploadDir, filename)
+
+	// 5. Simpan file fisik ke disk
+	if err := c.SaveUploadedFile(file, dst); err != nil {
+		c.Error(customErr.ErrInternalServer)
+		return
+	}
+
+	// 6. Simpan path avatar ke database via service
+	avatarURL := "/uploads/" + filename
+	if err := h.svc.UpdateAvatar(c.Request.Context(), userID.(string), avatarURL); err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":    true,
+		"message":    "Avatar uploaded successfully.",
+		"avatar_url": avatarURL,
+	})
+}
+```
+
 ### Step 5: Update `cmd/main.go`
-Daftarkan handler transaksi baru di `main.go`:
+Daftarkan handler transaksi dan upload avatar baru di `main.go`:
 
 ```go
     // ...
@@ -268,6 +353,9 @@ Daftarkan handler transaksi baru di `main.go`:
 		// ...
 		protected.POST("/transactions/transfer", txHandler.Transfer)
 		protected.GET("/transactions/history", txHandler.GetHistory)
+		
+		// Endpoint upload avatar
+		protected.POST("/users/avatar", uHandler.UploadAvatar)
 	}
     // ...
 ```
@@ -279,6 +367,7 @@ Daftarkan handler transaksi baru di `main.go`:
 * [ ] Endpoint `GET /api/v1/users/:id` tidak lagi menampilkan user yang memiliki data `deleted_at` tidak kosong (filter logic `deleted_at IS NULL` aktif).
 * [ ] Mengakses `GET /api/v1/transactions/history?page=2&limit=5` menghasilkan list data transaksi ke-6 sampai ke-10, lengkap dengan metadata `Meta` di response JSON.
 * [ ] Mengakses `GET /api/v1/transactions/history?page=1&limit=5&status=success` sukses menyaring dan hanya menampilkan data transaksi yang memiliki status `"success"`.
+* [ ] Mengirimkan request POST `multipart/form-data` dengan field file `avatar` ke `/api/v1/users/avatar` mengembalikan respons JSON sukses dan menyimpan file tersebut secara lokal di direktori `./uploads`.
 
 ---
 

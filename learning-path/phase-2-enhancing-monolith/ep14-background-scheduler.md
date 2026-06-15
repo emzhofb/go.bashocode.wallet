@@ -71,6 +71,9 @@ func (s *Scheduler) Start() {
 	// 3. Job 3: Bersihkan Refresh Token expired setiap hari pada jam 03:00 pagi
 	s.cron.AddFunc("0 0 3 * * *", s.CleanupExpiredRefreshTokens)
 
+	// 4. Job 4: Ekspor laporan transaksi harian ke file CSV setiap hari pada jam 23:59 malam
+	s.cron.AddFunc("0 59 23 * * *", s.GenerateDailyTransactionReport)
+
 	s.cron.Start()
 	logger.Log.Info("Background scheduler successfully started!")
 }
@@ -81,13 +84,18 @@ func (s *Scheduler) Stop() {
 }
 ```
 
-### Step 3: Membuat Job 1 — Cleanup OTPs & Job 3 — Cleanup Refresh Tokens
+### Step 3: Membuat Job 1 — Cleanup OTPs, Job 3 — Cleanup Refresh Tokens & Job 4 — Daily Report CSV
 Buat file baru `internal/scheduler/jobs.go` untuk menyimpan detail fungsi-fungsi job:
 
 ```go
 package scheduler
+
 import (
 	"context"
+	"encoding/csv"
+	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/emzhofb/gowallet/monolith/internal/logger"
@@ -131,6 +139,53 @@ func (s *Scheduler) CleanupExpiredRefreshTokens() {
 
 	rowsAffected, _ := result.RowsAffected()
 	logger.Log.InfoContext(ctx, "[Cron Job] Expired refresh token cleanup finished successfully.", "deleted_rows", rowsAffected)
+}
+
+func (s *Scheduler) GenerateDailyTransactionReport() {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	logger.Log.InfoContext(ctx, "[Cron Job] Starting daily transaction report generation...")
+
+	// 1. Query transaksi yang terjadi hari ini
+	query := `SELECT id, sender_wallet_id, receiver_wallet_id, amount, status, created_at FROM transactions WHERE DATE(created_at) = CURDATE()`
+	rows, err := s.db.QueryContext(ctx, query)
+	if err != nil {
+		logger.Warn(ctx, "[Cron Job] Bypass: Table transactions not created yet or error occurred. Skipped.", "error", err.Error())
+		return
+	}
+	defer rows.Close()
+
+	// 2. Buat direktori folder "reports" jika belum ada
+	reportsDir := "./reports"
+	_ = os.MkdirAll(reportsDir, os.ModePerm)
+
+	// Buat file CSV baru berdasarkan format tanggal saat ini
+	filename := filepath.Join(reportsDir, fmt.Sprintf("transaction_report_%s.csv", time.Now().Format("20060102")))
+	file, err := os.Create(filename)
+	if err != nil {
+		logger.Error(ctx, "Failed to create report file", "error", err.Error())
+		return
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	// 3. Tulis header kolom CSV
+	_ = writer.Write([]string{"Transaction ID", "Sender Wallet ID", "Receiver Wallet ID", "Amount", "Status", "Created At"})
+
+	rowCount := 0
+	for rows.Next() {
+		var id, sender, receiver, status, createdAt string
+		var amount float64
+
+		_ = rows.Scan(&id, &sender, &receiver, &amount, &status, &createdAt)
+		_ = writer.Write([]string{id, sender, receiver, fmt.Sprintf("%.2f", amount), status, createdAt})
+		rowCount++
+	}
+
+	logger.Log.InfoContext(ctx, "[Cron Job] Daily transaction report successfully generated.", "file", filename, "total_records", rowCount)
 }
 ```
 
@@ -223,6 +278,7 @@ Buka `cmd/main.go`. Inisialisasi scheduler dan jalankan method `Start()`. Pastik
 * [ ] Menjalankan aplikasi Go memicu log `Background scheduler successfully started!`.
 * [ ] Schedulers berjalan secara non-blocking (server Gin tetap bisa melayani request HTTP port `8080` tanpa terganggu).
 * [ ] Logika rekonsiliasi harian berjalan sesuai jadwal dan sukses mencatat log normal jika saldo sinkron, atau log `CRITICAL` jika kita sengaja memanipulasi saldo di tabel `wallets` secara ilegal via DB client GUI.
+* [ ] Job `GenerateDailyTransactionReport` terpanggil sesuai jadwal (atau dipicu manual lewat test driver) dan sukses membuat berkas CSV baru dengan format penamaan `transaction_report_YYYYMMDD.csv` di dalam subfolder `./reports/` yang berisi rekaman data transaksi hari ini.
 
 ---
 
@@ -235,3 +291,4 @@ Buka `cmd/main.go`. Inisialisasi scheduler dan jalankan method `Start()`. Pastik
 ## 📚 Referensi Belajar
 * [robfig/cron documentation](https://github.com/robfig/cron)
 * [Linux Cron syntax generator](https://crontab.guru/)
+* [Go CSV Encoding standard library package](https://pkg.go.dev/encoding/csv)
