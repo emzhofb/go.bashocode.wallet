@@ -85,7 +85,38 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
-var jwtSecret = []byte("super-secret-key-change-this-in-production")
+var jwtSecret = []byte("super-secret-key-change-this-in-production") // INI CONTOH HARDCODED YANG BURUK!
+```
+Untuk mengimplementasikannya secara aman dan siap produksi, kita **tidak boleh** menyimpan secret key di dalam kode sumber. Kita akan membaca nilainya dari environment variable `JWT_SECRET`.
+
+Ubah kode di `internal/auth/jwt.go` menjadi:
+
+```go
+package auth
+
+import (
+	"errors"
+	"os"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+)
+
+type JWTClaims struct {
+	UserID string `json:"user_id"`
+	Email  string `json:"email"`
+	jwt.RegisteredClaims
+}
+
+// Mengambil JWT Secret secara dinamis dari environment variable
+func getSecretKey() []byte {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		// Nilai fallback hanya untuk kebutuhan local development
+		return []byte("fallback-local-development-secret-key")
+	}
+	return []byte(secret)
+}
 
 func GenerateToken(userID string, email string, duration time.Duration) (string, error) {
 	claims := &JWTClaims{
@@ -99,12 +130,12 @@ func GenerateToken(userID string, email string, duration time.Duration) (string,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	return token.SignedString(getSecretKey())
 }
 
 func ValidateToken(tokenString string) (*JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(t *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+		return getSecretKey(), nil
 	})
 
 	if err != nil {

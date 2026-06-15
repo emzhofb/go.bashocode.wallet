@@ -1,4 +1,4 @@
-# Episode 31: Graceful Shutdown di Microservices
+# Episode 38: Graceful Shutdown di Microservices
 
 ## 🎯 Tujuan
 * Memahami bahaya mematikan aplikasi secara paksa (*abrupt termination* / `kill -9`).

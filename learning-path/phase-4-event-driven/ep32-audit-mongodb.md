@@ -1,4 +1,4 @@
-# Episode 28: Audit Logging dengan MongoDB
+# Episode 32: Audit Logging dengan MongoDB
 
 ## 🎯 Tujuan
 * Menambahkan database NoSQL **MongoDB** ke Docker Compose untuk menyimpan log audit yang besar dan dinamis.

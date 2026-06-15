@@ -1,4 +1,4 @@
-# Episode 34: Centralized Log Aggregation (ELK Stack)
+# Episode 41: Centralized Log Aggregation (ELK Stack)
 
 ## 🎯 Tujuan
 * Memahami tantangan debug log di multi-microservice (*log tracing isolation*).

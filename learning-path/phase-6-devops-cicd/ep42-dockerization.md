@@ -1,4 +1,4 @@
-# Episode 35: Containerizing all Microservices
+# Episode 42: Containerizing all Microservices
 
 ## 🎯 Tujuan
 * Menulis **Dockerfile** berbasis *Multi-stage Build* untuk masing-masing service (Gateway, Auth, Wallet, Notification, Audit) agar ukuran image Docker sangat kecil dan aman.

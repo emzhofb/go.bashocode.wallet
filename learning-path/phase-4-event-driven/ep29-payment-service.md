@@ -1,4 +1,4 @@
-# Episode 25: Payment Service (External Integration & Webhook HMAC)
+# Episode 29: Payment Service (External Integration & Webhook HMAC)
 
 ## 🎯 Tujuan
 * Membuat microservice baru bernama `payment-service` untuk menangani integrasi payment gateway luar (seperti Stripe atau Midtrans).
