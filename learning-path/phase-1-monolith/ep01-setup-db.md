@@ -54,6 +54,17 @@ Jalankan container database:
 docker compose up -d
 ```
 
+#### 🖥️ Cara Menyambung ke Database Lewat GUI Client (DBeaver, TablePlus, dll)
+Setelah container berhasil dijalankan, Anda dapat terhubung ke database menggunakan tools GUI client seperti **DBeaver**, **TablePlus**, atau **DataGrip** menggunakan informasi koneksi berikut:
+* **Database Driver**: `MySQL`
+* **Host**: `localhost` atau `127.0.0.1`
+* **Port**: `3306`
+* **Database Name**: `gowallet`
+* **Username**: `gowallet_user` (atau `root` untuk hak akses penuh)
+* **Password**: `gowallet_password` (atau `rootpassword` jika menggunakan username `root`)
+
+---
+
 ### Step 3: Setup Configuration Loader
 Kita memerlukan cara aman untuk membaca kredensial database dari file `.env`. Kita gunakan library standard `joho/godotenv`.
 
