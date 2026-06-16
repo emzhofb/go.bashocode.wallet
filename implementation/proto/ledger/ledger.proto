@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package ledger;
+
+option go_package = "github.com/emzhofb/gowallet/proto/ledger";
+
+service LedgerService {
+  rpc RecordEntry(RecordEntryRequest) returns (RecordEntryResponse);
+}
+
+message RecordEntryRequest {
+  string transaction_id = 1;
+  string wallet_id = 2;
+  string type = 3; // "debit" or "credit"
+  int64 amount = 4;
+}
+
+message RecordEntryResponse {
+  bool success = 1;
+  string entry_id = 2;
+}

@@ -1,0 +1,274 @@
+version: '3.8'
+
+services:
+  # ----------------------------------------------------
+  # INFRASTRUCTURE DEPENDENCIES
+  # ----------------------------------------------------
+  mysql:
+    image: mysql:8.0
+    container_name: gowallet-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_USER=gowallet_user
+      - MYSQL_PASSWORD=gowallet_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 2s
+      retries: 3
+    networks:
+      - gowallet-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: gowallet-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 3
+    networks:
+      - gowallet-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: gowallet-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - gowallet-network
+
+  mongodb:
+    image: mongo:6.0
+    container_name: gowallet-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - gowallet-network
+
+  # ----------------------------------------------------
+  # CORE APPLICATION MICROSERVICES
+  # ----------------------------------------------------
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: gowallet-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_ENV=production
+      - PORT=8080
+      - AUTH_SERVICE_GRPC_ADDR=auth-service:50051
+      - AUTH_SERVICE_URL=http://auth-service:8081
+      - USER_SERVICE_URL=http://user-service:8084
+      - WALLET_SERVICE_URL=http://wallet-service:8082
+      - TRANSACTION_SERVICE_URL=http://transaction-service:8086
+      - PAYMENT_SERVICE_URL=http://payment-service:8083
+    depends_on:
+      auth-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+      wallet-service:
+        condition: service_started
+      transaction-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
+    networks:
+      - gowallet-network
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: gowallet-auth
+    ports:
+      - "8081:8081"
+      - "50051:50051"
+    environment:
+      - APP_ENV=production
+      - PORT=8081
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - USER_GRPC_ADDR=user-service:50052
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - gowallet-network
+
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    container_name: gowallet-user
+    ports:
+      - "8084:8084"
+      - "50052:50052"
+    environment:
+      - APP_ENV=production
+      - PORT=8084
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=gowallet_user
+      - DB_PASSWORD=gowallet_password
+      - DB_NAME=gowallet_user
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - gowallet-network
+
+  wallet-service:
+    build:
+      context: .
+      dockerfile: wallet-service/Dockerfile
+    container_name: gowallet-wallet
+    ports:
+      - "8082:8082"
+      - "50053:50053"
+    environment:
+      - APP_ENV=production
+      - PORT=8082
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=gowallet_user
+      - DB_PASSWORD=gowallet_password
+      - DB_NAME=gowallet_wallet
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - gowallet-network
+
+  ledger-service:
+    build:
+      context: .
+      dockerfile: ledger-service/Dockerfile
+    container_name: gowallet-ledger
+    ports:
+      - "50054:50054"
+    environment:
+      - APP_ENV=production
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=gowallet_user
+      - DB_PASSWORD=gowallet_password
+      - DB_NAME=gowallet_ledger
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - gowallet-network
+
+  transaction-service:
+    build:
+      context: .
+      dockerfile: transaction-service/Dockerfile
+    container_name: gowallet-transaction
+    ports:
+      - "8086:8086"
+      - "50056:50056"
+    environment:
+      - APP_ENV=production
+      - PORT=8086
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=gowallet_user
+      - DB_PASSWORD=gowallet_password
+      - DB_NAME=gowallet_transactions
+      - RABBITMQ_URL=amqp://gowallet_user:gowallet_password@rabbitmq:5672/
+      - USER_GRPC_ADDR=user-service:50052
+      - WALLET_GRPC_ADDR=wallet-service:50053
+      - LEDGER_GRPC_ADDR=ledger-service:50054
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - gowallet-network
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: payment-service/Dockerfile
+    container_name: gowallet-payment
+    ports:
+      - "8083:8083"
+    environment:
+      - APP_ENV=production
+      - PORT=8083
+      - RABBITMQ_URL=amqp://gowallet_user:gowallet_password@rabbitmq:5672/
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - gowallet-network
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    container_name: gowallet-notification
+    environment:
+      - APP_ENV=production
+      - RABBITMQ_URL=amqp://gowallet_user:gowallet_password@rabbitmq:5672/
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - gowallet-network
+
+  audit-service:
+    build:
+      context: .
+      dockerfile: audit-service/Dockerfile
+    container_name: gowallet-audit
+    environment:
+      - APP_ENV=production
+      - MONGO_URI=mongodb://mongodb:27017
+      - MONGO_DATABASE=gowallet_audit
+      - RABBITMQ_URL=amqp://gowallet_user:gowallet_password@rabbitmq:5672/
+    depends_on:
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - gowallet-network
+
+  scheduler-service:
+    build:
+      context: .
+      dockerfile: scheduler-service/Dockerfile
+    container_name: gowallet-scheduler
+    environment:
+      - APP_ENV=production
+    networks:
+      - gowallet-network
+
+networks:
+  gowallet-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  mongodb_data:

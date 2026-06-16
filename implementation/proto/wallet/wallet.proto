@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package wallet;
+
+option go_package = "github.com/emzhofb/gowallet/proto/wallet";
+
+service WalletService {
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
+  rpc UpdateBalance(UpdateBalanceRequest) returns (UpdateBalanceResponse);
+}
+
+message GetBalanceRequest {
+  string user_id = 1;
+}
+
+message GetBalanceResponse {
+  string wallet_id = 1;
+  string user_id = 2;
+  int64 balance = 3;
+}
+
+message UpdateBalanceRequest {
+  string wallet_id = 1;
+  int64 amount = 2; // Can be negative for debit, positive for credit
+  string transaction_id = 3;
+}
+
+message UpdateBalanceResponse {
+  bool success = 1;
+  int64 new_balance = 2;
+}
