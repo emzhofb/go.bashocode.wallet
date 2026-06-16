@@ -1,4 +1,4 @@
-# Episode 36: Integration & E2E Testing
+# Episode 37: Integration & E2E Testing
 
 ## 🎯 Tujuan
 * Memahami perbedaan **Unit Test** (menggunakan mock) dengan **Integration Test** (menggunakan database/infrastruktur asli).

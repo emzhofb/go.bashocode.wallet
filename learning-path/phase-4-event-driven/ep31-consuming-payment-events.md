@@ -1,4 +1,4 @@
-# Episode 30: Consuming Payment Events in Wallet Service
+# Episode 31: Consuming Payment Events in Wallet Service
 
 ## 🎯 Tujuan
 * Membuat **RabbitMQ Consumer** di dalam `wallet-service` untuk mendengarkan (*subscribe*) event `"payment.completed"`.

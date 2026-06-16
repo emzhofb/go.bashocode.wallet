@@ -1,4 +1,4 @@
-# Episode 37: Reliability Patterns (Circuit Breakers & Retries)
+# Episode 38: Reliability Patterns (Circuit Breakers & Retries)
 
 ## 🎯 Tujuan
 * Mengenalkan pola **Circuit Breaker** untuk mengisolasi kegagalan jaringan internal dan mencegah *cascade failure* (sistem runtuh domino).

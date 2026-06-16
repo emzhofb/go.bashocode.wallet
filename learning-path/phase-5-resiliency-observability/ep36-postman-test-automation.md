@@ -1,4 +1,4 @@
-# Episode 35: Postman Collection & API Test Automation
+# Episode 36: Postman Collection & API Test Automation
 
 ## 🎯 Tujuan
 * Mendesain **Postman Collection** terstruktur untuk menguji seluruh endpoint microservices.

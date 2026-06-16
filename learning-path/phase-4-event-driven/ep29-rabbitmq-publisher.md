@@ -1,15 +1,13 @@
-# Episode 28: RabbitMQ & Event Publishing
+# Episode 29: RabbitMQ & Event Publishing
 
 ## 🎯 Tujuan
 * Menambahkan **RabbitMQ** ke Docker Compose sebagai Message Broker utama.
 * Membuat program publisher (*outbox worker*) yang berjalan secara periodik untuk mengambil event pending di tabel `outbox_events`, mem-publish ke RabbitMQ, dan mengubah status event menjadi `"processed"`.
 * Memahami konsep **At-Least-Once Delivery** (pesan dijamin terkirim minimal sekali).
 
----
-
-## 📐 Konsep Outbox Polling Publisher
-Di Episode 19, kita sukses menyimpan event di tabel `outbox_events`.
-Sekarang kita membuat sebuah background worker di dalam `wallet-service` yang berjalan setiap 5 detik:
+---## 📐 Konsep Outbox Polling Publisher
+Di Episode 28, kita sukses menyimpan event di tabel `outbox_events`.
+Sekarang kita membuat sebuah background worker di dalam `transaction-service` yang berjalan setiap 5 detik:
 1. Membaca baris tabel `SELECT * FROM outbox_events WHERE status = 'pending' LIMIT 50`.
 2. Untuk setiap event, kirim payload JSON ke RabbitMQ Exchange.
 3. Jika pengiriman ke RabbitMQ sukses, update status event di database menjadi `"processed"` (atau hapus baris tersebut agar database tidak membengkak).
@@ -48,7 +46,7 @@ go get github.com/rabbitmq/amqp091-go
 ```
 
 ### Step 3: Update `.env` & Config Loader
-Tambahkan URL koneksi RabbitMQ di file `.env`:
+Tambahkan URL koneksi RabbitMQ di file `.env` milik `transaction-service`:
 ```env
 RABBITMQ_URL=amqp://guest:guest@localhost:5672/
 ```
@@ -56,7 +54,7 @@ RABBITMQ_URL=amqp://guest:guest@localhost:5672/
 Update config loader `internal/config/config.go` untuk membaca `RABBITMQ_URL`.
 
 ### Step 4: Membuat RabbitMQ Connection Wrapper (`internal/database/rabbitmq.go`)
-Buat file helper koneksi RabbitMQ di `internal/database/rabbitmq.go`:
+Buat file helper koneksi RabbitMQ di `transaction-service/internal/database/rabbitmq.go`:
 
 ```go
 package database
@@ -78,7 +76,7 @@ func ConnectRabbitMQ(url string) (*amqp.Connection, error) {
 ```
 
 ### Step 5: Membuat Outbox Publisher Worker (`internal/transaction/worker/outbox.go`)
-Buat folder baru `internal/transaction/worker/` dan buat file `outbox.go`. Worker ini akan melakukan polling database dan menembakkan event ke RabbitMQ.
+Buat folder baru `internal/transaction/worker/` di `transaction-service` dan buat file `outbox.go`. Worker ini akan melakukan polling database dan menembakkan event ke RabbitMQ.
 
 ```go
 package worker
@@ -89,8 +87,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/emzhofb/gowallet/wallet-service/internal/logger"
-	"github.com/emzhofb/gowallet/wallet-service/internal/transaction/model"
+	"github.com/emzhofb/gowallet/transaction-service/internal/logger"
+	"github.com/emzhofb/gowallet/transaction-service/internal/transaction/model"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -201,12 +199,12 @@ func (w *OutboxWorker) processPendingEvents(ctx context.Context) {
 ```
 
 ### Step 6: Jalankan Worker di `cmd/main.go`
-Koneksikan RabbitMQ di `main.go` dan aktifkan outbox worker di latar belakang.
+Koneksikan RabbitMQ di `main.go` `transaction-service` dan aktifkan outbox worker di latar belakang.
 
 ```go
-// Di dalam main.go wallet-service:
+// Di dalam main.go transaction-service:
 	
-	// ... koneksi database & Redis ...
+	// ... koneksi database ...
 	
 	// Connect to RabbitMQ
 	amqpConn, err := database.ConnectRabbitMQ(cfg.RabbitMQURL)
@@ -228,9 +226,9 @@ Koneksikan RabbitMQ di `main.go` dan aktifkan outbox worker di latar belakang.
 
 ## ✅ Acceptance Criteria
 * [ ] Container RabbitMQ berjalan lancar dan Web Management UI bisa diakses di port `15672`.
-* [ ] Menjalankan `wallet-service` memicu log koneksi sukses ke RabbitMQ.
+* [ ] Menjalankan `transaction-service` memicu log koneksi sukses ke RabbitMQ.
 * [ ] Setelah melakukan transaksi transfer, log outbox worker menampilkan data `Publishing pending outbox events` dan record di tabel `outbox_events` berubah status menjadi `"processed"`.
-* [ ] Di dashboard RabbitMQ Management, jumlah message masuk di exchange `wallet.events` bertambah.
+* [ ] Di dashboard RabbitMQ Management, jumlah message masuk di exchange `wallet.events` bertambah.jumlah message masuk di exchange `wallet.events` bertambah.
 
 ---
 

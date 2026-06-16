@@ -7,7 +7,7 @@
 
 ---
 
-## 🗺️ Peta Kurikulum (6 Fase, 43 Episode)
+## 🗺️ Peta Kurikulum (6 Fase, 44 Episode)
 
 Panduan ini dirancang untuk membimbing junior developer secara bertahap tanpa membuat mereka pusing dengan terlalu banyak teknologi di awal.
 
@@ -18,16 +18,16 @@ Panduan ini dirancang untuk membimbing junior developer secara bertahap tanpa me
      [ Fase 2: Cache & Background ] (Eps 12-18)
                  │  (Redis + OAuth2 + Token Rotation + RBAC)
                  ▼
-    [ Fase 3: Pemecahan Microservices ] (Eps 19-27)
-                 │  (API Gateway + gRPC + Complete Service Decomposition + Outbox)
+    [ Fase 3: Pemecahan Microservices ] (Eps 19-28)
+                 │  (API Gateway + gRPC + Complete Service Decomposition + Scheduler)
                  ▼
-       [ Fase 4: Event-Driven ] (Eps 28-33)
+       [ Fase 4: Event-Driven ] (Eps 29-34)
                  │  (RabbitMQ + MongoDB Audit + Payment Service)
                  ▼
-     [ Fase 5: Resiliency, Config & Testing ] (Eps 34-41)
+     [ Fase 5: Resiliency, Config & Testing ] (Eps 35-42)
                  │  (Secrets + Postman + Integration Testing + Tracing + ELK)
                  ▼
-        [ Fase 6: DevOps & CI/CD ] (Eps 42-43)
+        [ Fase 6: DevOps & CI/CD ] (Eps 43-44)
                     (Docker Compose + GitHub Actions)
 ```
 
@@ -69,32 +69,33 @@ Fase ini mengajarkan bagaimana memecah monolith menjadi layanan-layanan independ
 * [Episode 24: Memecah Ledger Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep24-splitting-ledger.md)
 * [Episode 25: Memecah Transaction Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep25-splitting-transaction.md)
 * [Episode 26: gRPC Communication for Transfer Flow](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep26-grpc-transfer-flow.md)
-* [Episode 27: Outbox Pattern untuk Transaksi Terdistribusi](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep27-outbox-pattern.md)
+* [Episode 27: Memecah Scheduler Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep27-splitting-scheduler.md)
+* [Episode 28: Outbox Pattern untuk Transaksi Terdistribusi](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep28-outbox-pattern.md)
 
 ### Fase 4: Event-Driven Communication
 Fase ini mengenalkan komunikasi asinkronus menggunakan message broker untuk skalabilitas yang lebih tinggi.
-* [Episode 28: RabbitMQ & Event Publishing](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep28-rabbitmq-publisher.md)
-* [Episode 29: Payment Service (External Integration & Webhook HMAC)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep29-payment-service.md)
-* [Episode 30: Consuming Payment Events in Wallet Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep30-consuming-payment-events.md)
-* [Episode 31: Notification Service (Consumer)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep31-notification-consumer.md)
-* [Episode 32: Audit Logging dengan MongoDB](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep32-audit-mongodb.md)
-* [Episode 33: RabbitMQ Resiliency (DLQ & Retries)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep33-rabbitmq-dlq-retries.md)
+* [Episode 29: RabbitMQ & Event Publishing](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep29-rabbitmq-publisher.md)
+* [Episode 30: Payment Service (External Integration & Webhook HMAC)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep30-payment-service.md)
+* [Episode 31: Consuming Payment Events in Wallet Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep31-consuming-payment-events.md)
+* [Episode 32: Notification Service (Consumer)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep32-notification-consumer.md)
+* [Episode 33: Audit Logging dengan MongoDB](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep33-audit-mongodb.md)
+* [Episode 34: RabbitMQ Resiliency (DLQ & Retries)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep34-rabbitmq-dlq-retries.md)
 
 ### Fase 5: Resiliency, Config & Testing
 Fase ini mengajarkan cara mengkonfigurasi environment secara aman, membuat automation test suite, menulis integration test, serta meningkatkan ketahanan (*reliability*) dan pemantauan (*observability*).
-* [Episode 34: Secret Management & Multi-environment Config](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep34-multi-env-secrets.md)
-* [Episode 35: Postman Collection & API Test Automation](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep35-postman-test-automation.md)
-* [Episode 36: Integration & E2E Testing](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep36-integration-e2e-testing.md)
-* [Episode 37: Reliability Patterns (Circuit Breakers & Retries)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep37-reliability-patterns.md)
-* [Episode 38: Graceful Shutdown di Microservices](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep38-graceful-shutdown.md)
-* [Episode 39: Distributed Tracing (OpenTelemetry & Jaeger)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep39-opentelemetry-jaeger.md)
-* [Episode 40: Metrics Monitoring (Prometheus & Grafana)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep40-prometheus-grafana.md)
-* [Episode 41: Centralized Log Aggregation (ELK Stack)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep41-elk-stack.md)
+* [Episode 35: Secret Management & Multi-environment Config](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep35-multi-env-secrets.md)
+* [Episode 36: Postman Collection & API Test Automation](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep36-postman-test-automation.md)
+* [Episode 37: Integration & E2E Testing](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep37-integration-e2e-testing.md)
+* [Episode 38: Reliability Patterns (Circuit Breakers & Retries)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep38-reliability-patterns.md)
+* [Episode 39: Graceful Shutdown di Microservices](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep39-graceful-shutdown.md)
+* [Episode 40: Distributed Tracing (OpenTelemetry & Jaeger)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep40-opentelemetry-jaeger.md)
+* [Episode 41: Metrics Monitoring (Prometheus & Grafana)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep41-prometheus-grafana.md)
+* [Episode 42: Centralized Log Aggregation (ELK Stack)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep42-elk-stack.md)
 
 ### Fase 6: DevOps & Automation
 Fase deployment standard industri.
-* [Episode 42: Containerizing all Microservices](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-6-devops-cicd/ep42-dockerization.md)
-* [Episode 43: CI/CD Pipeline dengan GitHub Actions](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-6-devops-cicd/ep43-github-actions.md)
+* [Episode 43: Containerizing all Microservices](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-6-devops-cicd/ep43-dockerization.md)
+* [Episode 44: CI/CD Pipeline dengan GitHub Actions](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-6-devops-cicd/ep44-github-actions.md)
 
 ---
 

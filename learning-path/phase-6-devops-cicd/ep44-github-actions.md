@@ -1,4 +1,4 @@
-# Episode 43: CI/CD Pipeline dengan GitHub Actions
+# Episode 44: CI/CD Pipeline dengan GitHub Actions
 
 ## 🎯 Tujuan
 * Memahami prinsip **Continuous Integration (CI)** dan **Continuous Deployment (CD)**.

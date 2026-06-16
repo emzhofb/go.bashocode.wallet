@@ -1,4 +1,4 @@
-# Episode 39: Distributed Tracing (OpenTelemetry & Jaeger)
+# Episode 40: Distributed Tracing (OpenTelemetry & Jaeger)
 
 ## 🎯 Tujuan
 * Mengenalkan konsep **Distributed Tracing** untuk memantau perjalanan satu request melewati banyak microservices.

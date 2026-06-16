@@ -1,4 +1,4 @@
-# Episode 34: Secret Management & Multi-environment Config
+# Episode 35: Secret Management & Multi-environment Config
 
 ## 🎯 Tujuan
 * Memahami bahaya menyimpan kredensial sensitif (*secrets*) di dalam repositori kode.

@@ -1,4 +1,4 @@
-# Episode 31: Notification Service (Consumer)
+# Episode 32: Notification Service (Consumer)
 
 ## 🎯 Tujuan
 * Membuat microservice baru bernama `notification-service`.

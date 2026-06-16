@@ -120,9 +120,10 @@ func main() {
 	log.Println("Starting API Gateway on port 8080...")
 
 	// 1. Buat router proxy untuk masing-masing target microservices
-	// (Untuk saat ini, kita arahkan dulu ke port localhost service domain lama kita)
 	userServiceUrl := "http://localhost:8081" // Auth & User Service
 	walletServiceUrl := "http://localhost:8082" // Wallet Service
+	transactionServiceUrl := "http://localhost:8086" // Transaction Service
+	paymentServiceUrl := "http://localhost:8083" // Payment Service
 
 	userProxy, err := proxy.NewReverseProxy(userServiceUrl)
 	if err != nil {
@@ -134,11 +135,21 @@ func main() {
 		log.Fatalf("Failed to initialize wallet proxy: %v", err)
 	}
 
+	transactionProxy, err := proxy.NewReverseProxy(transactionServiceUrl)
+	if err != nil {
+		log.Fatalf("Failed to initialize transaction proxy: %v", err)
+	}
+
+	paymentProxy, err := proxy.NewReverseProxy(paymentServiceUrl)
+	if err != nil {
+		log.Fatalf("Failed to initialize payment proxy: %v", err)
+	}
+
 	r := gin.New()
 	r.Use(gin.Recovery())
 
 	// 2. Tentukan aturan routing proxy
-	// Semua request ke /api/v1/users/* akan diteruskan ke User Service di port 8081
+	// Semua request ke /api/v1/users/* akan diteruskan ke User Service di port 8081 (monolith) / 8084 (microservices split)
 	r.Any("/api/v1/users/*path", func(c *gin.Context) {
 		userProxy.ServeHTTP(c.Writer, c.Request)
 	})
@@ -150,6 +161,16 @@ func main() {
 	// Semua request ke /api/v1/wallets/* akan diteruskan ke Wallet Service di port 8082
 	r.Any("/api/v1/wallets/*path", func(c *gin.Context) {
 		walletProxy.ServeHTTP(c.Writer, c.Request)
+	})
+
+	// Semua request ke /api/v1/transactions/* akan diteruskan ke Transaction Service di port 8086
+	r.Any("/api/v1/transactions/*path", func(c *gin.Context) {
+		transactionProxy.ServeHTTP(c.Writer, c.Request)
+	})
+
+	// Semua request ke /api/v1/payments/* akan diteruskan ke Payment Service di port 8083
+	r.Any("/api/v1/payments/*path", func(c *gin.Context) {
+		paymentProxy.ServeHTTP(c.Writer, c.Request)
 	})
 
 	log.Println("API Gateway listening on port 8080...")

@@ -1,4 +1,4 @@
-# Episode 33: RabbitMQ Resiliency (DLQ & Retries)
+# Episode 34: RabbitMQ Resiliency (DLQ & Retries)
 
 ## 🎯 Tujuan
 * Memahami ancaman **Poison Message** (pesan rusak yang gagal diproses terus-menerus dan memblokir antrean).
