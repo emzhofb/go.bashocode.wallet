@@ -101,8 +101,36 @@ func (p *ReverseProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-### Step 3: Implementasi Routing di Gateway `cmd/main.go`
-Buka file `cmd/main.go` di `api-gateway/`. Gateway tidak lagi melakukan query database atau validasi registrasi user secara langsung. Gateway hanya bertugas mem-proxy traffic ke microservices yang sesuai.
+### Step 3: Membuat CORS Middleware (`internal/middleware/cors.go`)
+Untuk mencegah isu pemblokiran browser saat frontend client (web/mobile) memanggil API Gateway kita lintas domain, kita perlu mengaktifkan **CORS (Cross-Origin Resource Sharing)**.
+
+Buat file baru di `api-gateway/internal/middleware/cors.go`:
+
+```go
+package middleware
+
+import "github.com/gin-gonic/gin"
+
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With, X-Correlation-ID")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+
+		// Tangani preflight OPTIONS request
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	}
+}
+```
+
+### Step 4: Implementasi Routing di Gateway `cmd/main.go`
+Buka file `cmd/main.go` di `api-gateway/`. Gateway tidak lagi melakukan query database atau validasi registrasi user secara langsung. Gateway hanya bertugas mem-proxy traffic ke microservices yang sesuai dan menangani *cross-cutting concerns* seperti CORS.
 
 ```go
 package main
@@ -112,6 +140,7 @@ import (
 	"net/http"
 
 	"github.com/emzhofb/gowallet/api-gateway/internal/config"
+	"github.com/emzhofb/gowallet/api-gateway/internal/middleware"
 	"github.com/emzhofb/gowallet/api-gateway/internal/proxy"
 	"github.com/gin-gonic/gin"
 )
@@ -147,6 +176,9 @@ func main() {
 
 	r := gin.New()
 	r.Use(gin.Recovery())
+	
+	// Aktifkan CORS Middleware
+	r.Use(middleware.CORSMiddleware())
 
 	// 2. Tentukan aturan routing proxy
 	// Semua request ke /api/v1/users/* akan diteruskan ke User Service di port 8081 (monolith) / 8084 (microservices split)
@@ -186,14 +218,17 @@ func main() {
 * [ ] File `go.work` sukses terbuat di root directory dan mendaftarkan folder `api-gateway`.
 * [ ] Gateway berjalan di port `8080` secara independen.
 * [ ] Memanggil endpoint `GET http://localhost:8080/api/v1/users/me` diteruskan dengan benar ke target service dibelakangnya.
+* [ ] Mengirimkan HTTP `OPTIONS` request ke API Gateway berhasil mengembalikan status HTTP `204 No Content` beserta header CORS yang sesuai.
 
 ---
 
 ## 💡 Tips untuk Junior
 * **X-Forwarded Headers:** Selalu sertakan header `X-Forwarded-For` dan `X-Forwarded-Host` saat melakukan reverse proxy. Ini membantu service di belakang gateway mengetahui IP asli pengguna akhir (*real client IP*), bukan IP server gateway.
+* **CORS Preflight (OPTIONS):** Sebelum browser mengirimkan request asli (seperti `POST` atau `PUT` dengan header kustom), browser akan mengirimkan request `OPTIONS` terlebih dahulu (*preflight*). Jika server kita tidak membalas request preflight ini dengan response status sukses (biasanya `200` atau `204`) beserta header CORS, browser akan memblokir kelanjutan request tersebut.
 
 ---
 
 ## 📚 Referensi Belajar
 * [Go Workspaces (Official Documentation)](https://go.dev/doc/tutorial/workspaces)
 * [Reverse Proxy Pattern Guide](https://www.nginx.com/resources/glossary/reverse-proxy-server/)
+* [Mozilla MDN Web Docs - CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)

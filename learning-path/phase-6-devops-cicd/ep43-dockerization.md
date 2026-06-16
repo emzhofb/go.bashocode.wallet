@@ -330,6 +330,80 @@ services:
     networks:
       - gowallet-network
 
+  # ----------------------------------------------------
+  # OBSERVABILITY & MONITORING STACK
+  # ----------------------------------------------------
+  jaeger:
+    image: jaegertracing/all-in-one:1.55
+    container_name: gowallet-jaeger
+    ports:
+      - "16686:16686" # Web UI
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    restart: always
+    networks:
+      - gowallet-network
+
+  prometheus:
+    image: prom/prometheus:v2.50.0
+    container_name: gowallet-prometheus
+    volumes:
+      - ./deployments/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    restart: always
+    networks:
+      - gowallet-network
+
+  grafana:
+    image: grafana/grafana:10.3.3
+    container_name: gowallet-grafana
+    ports:
+      - "3000:3000"
+    restart: always
+    networks:
+      - gowallet-network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: gowallet-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false # Matikan security untuk simplifikasi lokal
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # Batasi limit RAM agar tidak crash
+    ports:
+      - "9200:9200"
+    restart: always
+    networks:
+      - gowallet-network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.12.0
+    container_name: gowallet-logstash
+    volumes:
+      - ./deployments/elk/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5044:5044"
+      - "5000:5000/tcp"
+    environment:
+      - "LS_JAVA_OPTS=-Xms256m -Xmx256m"
+    depends_on:
+      - elasticsearch
+    restart: always
+    networks:
+      - gowallet-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.0
+    container_name: gowallet-kibana
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    restart: always
+    networks:
+      - gowallet-network
+
 networks:
   gowallet-network:
     driver: bridge
@@ -345,22 +419,24 @@ Matikan seluruh proses aplikasi yang sedang berjalan di komputer lokal Anda, lal
 ```bash
 docker compose up --build
 ```
-Docker akan mendownload base image, mem-build seluruh 10 microservices Go kita secara bertahap, dan menyalakan semuanya secara orkestrasi. 
+Docker akan mendownload base image, mem-build seluruh 10 microservices Go kita secara bertahap, dan menyalakan semuanya beserta seluruh infrastruktur datastore dan stack observability secara otomatis dalam satu kesatuan orkestrasi. 
 
 ---
 
 ## ✅ Acceptance Criteria
 * [ ] Setiap service memiliki file `Dockerfile` valid berbasis multi-stage build.
-* [ ] Menjalankan `docker compose up --build` sukses menyalakan 4 database/broker infrastruktur dan seluruh 10 microservices Go kita.
+* [ ] Menjalankan `docker compose up --build` sukses menyalakan 4 database/broker infrastruktur, 6 stack observability (Jaeger, Prometheus, Grafana, Elasticsearch, Logstash, Kibana), dan seluruh 10 microservices Go kita.
 * [ ] MySQL menginisialisasi 5 database terpisah (`gowallet_auth`, `gowallet_user`, `gowallet_wallet`, `gowallet_ledger`, `gowallet_transactions`) pada startup awal container.
 * [ ] Memanggil endpoint `POST http://localhost:8080/api/v1/auth/login` berhasil mengembalikan JWT Token (menandakan gateway sukses mem-proxy request ke container `auth-service` di dalam Docker bridge network).
 * [ ] Memanggil `/api/v1/transactions/transfer` berhasil mengorkestrasi mutasi saldo di `wallet-service` dan menulis ledger di `ledger-service` melalui komunikasi gRPC internal.
+* [ ] Seluruh dashboard monitoring (Kibana di `:5601`, Grafana di `:3000`, Prometheus di `:9090`, dan Jaeger di `:16686`) dapat diakses secara lancar.
 
 ---
 
 ## 💡 Tips untuk Junior
 * **Use Non-root User:** Menambahkan instruksi `USER appuser` di Dockerfile sangat penting untuk security hardening. Secara default, Docker menjalankan aplikasi dengan user `root`. Jika ada celah keamanan RCE (*Remote Code Execution*) di aplikasi kita, hacker otomatis menguasai server host kita sebagai root. Dengan user non-root, hak akses peretas sangat dibatasi.
 * **Isolasi Database:** Masing-masing microservice HANYA boleh mengakses database miliknya sendiri (misal `user-service` mengakses `gowallet_user`). Mengakses tabel di database service lain secara langsung melanggar prinsip *loose coupling* dan akan merusak integritas microservices Anda di lingkungan production.
+* **Resource Optimization:** Karena kita menjalankan total 20 container secara bersamaan di local machine (10 microservices + 4 infra datastore + 6 observability stack), pastikan RAM komputer development Anda memadai (minimal 16GB) dan alokasi resource Docker Desktop diatur dengan baik agar tidak lambat atau hang.
 
 ---
 
@@ -368,3 +444,4 @@ Docker akan mendownload base image, mem-build seluruh 10 microservices Go kita s
 * [Docker Multi-stage Builds (Official Guide)](https://docs.docker.com/build/building/multi-stage/)
 * [Docker Compose Networking tutorial](https://docs.docker.com/compose/networking/)
 * [Database-per-service Pattern Guide](https://microservices.io/patterns/data/database-per-service.html)
+* [Observability Stack with Docker Compose](https://opentelemetry.io/docs/demo/docker-deployment/)

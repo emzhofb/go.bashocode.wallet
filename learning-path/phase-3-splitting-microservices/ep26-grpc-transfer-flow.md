@@ -121,14 +121,25 @@ func (s *transactionService) Transfer(ctx context.Context, senderUserID string, 
 	}
 
 	// 6. Tambahkan Saldo Penerima (Kredit) via Wallet Service gRPC
-	receiverWallet, _ := s.walletClient.GetWalletByUserID(ctx, &walletPb.GetWalletRequest{UserId: receiverUser.GetId()})
+	receiverWallet, err := s.walletClient.GetWalletByUserID(ctx, &walletPb.GetWalletRequest{UserId: receiverUser.GetId()})
+	if err != nil {
+		// Kompensasi: kembalikan saldo pengirim jika gagal mencari wallet penerima
+		s.walletClient.UpdateWalletBalance(ctx, &walletPb.UpdateBalanceRequest{
+			UserId:          senderUserID,
+			Amount:          req.Amount,
+			ExpectedVersion: senderWallet.GetVersion() + 1,
+		})
+		s.txRepo.UpdateStatus(ctx, txID, "FAILED")
+		return nil, customErr.NewAppError(http.StatusNotFound, "RECEIVER_WALLET_NOT_FOUND", "Dompet penerima tidak ditemukan.")
+	}
+
 	_, err = s.walletClient.UpdateWalletBalance(ctx, &walletPb.UpdateBalanceRequest{
 		UserId:          receiverUser.GetId(),
 		Amount:          req.Amount,
 		ExpectedVersion: receiverWallet.GetVersion(),
 	})
 	if err != nil {
-		// Rollback saldo pengirim jika gagal kredit ke penerima
+		// Kompensasi: kembalikan saldo pengirim jika gagal kredit ke penerima
 		s.walletClient.UpdateWalletBalance(ctx, &walletPb.UpdateBalanceRequest{
 			UserId:          senderUserID,
 			Amount:          req.Amount,
@@ -138,19 +149,57 @@ func (s *transactionService) Transfer(ctx context.Context, senderUserID string, 
 		return nil, customErr.ErrInternalServer
 	}
 
-	// 7. Catat Jejak Audit Finansial di Ledger Service gRPC
-	s.ledgerClient.RecordLedgerEntry(ctx, &ledgerPb.RecordEntryRequest{
+	// 7. Catat Jejak Audit Finansial di Ledger Service gRPC (dan Verifikasi Status Error!)
+	_, err = s.ledgerClient.RecordLedgerEntry(ctx, &ledgerPb.RecordEntryRequest{
 		TransactionId: txID,
 		WalletId:      senderWallet.GetId(),
 		Type:          "DEBIT",
 		Amount:        req.Amount,
 	})
-	s.ledgerClient.RecordLedgerEntry(ctx, &ledgerPb.RecordEntryRequest{
+	if err != nil {
+		// Kompensasi: kembalikan saldo penerima & pengirim karena gagal mencatat audit ledger
+		s.walletClient.UpdateWalletBalance(ctx, &walletPb.UpdateBalanceRequest{
+			UserId:          receiverUser.GetId(),
+			Amount:          -req.Amount,
+			ExpectedVersion: receiverWallet.GetVersion() + 1,
+		})
+		s.walletClient.UpdateWalletBalance(ctx, &walletPb.UpdateBalanceRequest{
+			UserId:          senderUserID,
+			Amount:          req.Amount,
+			ExpectedVersion: senderWallet.GetVersion() + 2,
+		})
+		s.txRepo.UpdateStatus(ctx, txID, "FAILED")
+		return nil, customErr.NewAppError(http.StatusInternalServerError, "LEDGER_ERROR", "Gagal mencatat audit log. Transaksi dibatalkan.")
+	}
+
+	_, err = s.ledgerClient.RecordLedgerEntry(ctx, &ledgerPb.RecordEntryRequest{
 		TransactionId: txID,
 		WalletId:      receiverWallet.GetId(),
 		Type:          "CREDIT",
 		Amount:        req.Amount,
 	})
+	if err != nil {
+		// Kompensasi: kembalikan saldo penerima & pengirim
+		s.walletClient.UpdateWalletBalance(ctx, &walletPb.UpdateBalanceRequest{
+			UserId:          receiverUser.GetId(),
+			Amount:          -req.Amount,
+			ExpectedVersion: receiverWallet.GetVersion() + 1,
+		})
+		s.walletClient.UpdateWalletBalance(ctx, &walletPb.UpdateBalanceRequest{
+			UserId:          senderUserID,
+			Amount:          req.Amount,
+			ExpectedVersion: senderWallet.GetVersion() + 2,
+		})
+		// Kompensasi: karena DEBIT ledger pengirim di atas sudah terlanjur dicatat, kita harus menulis CREDIT ledger penyeimbang (ledger bersifat immutable)
+		s.ledgerClient.RecordLedgerEntry(ctx, &ledgerPb.RecordEntryRequest{
+			TransactionId: txID,
+			WalletId:      senderWallet.GetId(),
+			Type:          "CREDIT", // Menetralkan DEBIT sebelumnya
+			Amount:        req.Amount,
+		})
+		s.txRepo.UpdateStatus(ctx, txID, "FAILED")
+		return nil, customErr.NewAppError(http.StatusInternalServerError, "LEDGER_ERROR", "Gagal mencatat audit log penerima. Transaksi dibatalkan.")
+	}
 
 	// 8. Update status transaksi menjadi SUCCESS
 	txRecord.Status = "SUCCESS"
@@ -193,8 +242,10 @@ Buka `transaction-service/cmd/main.go`. Setup koneksi dial ke tiga port gRPC ser
 ## ✅ Acceptance Criteria
 * [ ] Memanggil endpoint `POST /api/v1/transactions/transfer` sukses memicu pemanggilan gRPC berantai ke User, Wallet, dan Ledger services.
 * [ ] Mutasi saldo ter-update dengan aman di database `wallet-service` dan data mutasi pembukuan tercatat di `ledger-service`.
+* [ ] Jika proses perekaman ledger atau salah satu mutasi saldo gagal di tengah jalan, sistem melakukan panggilan gRPC kompensasi untuk mengembalikan saldo seperti semula dan menandai transaksi sebagai `FAILED`.
 
 ---
 
 ## 💡 Tips untuk Junior
-* **Saga Orchestration Pattern:** Logika transfer di atas adalah contoh sederhana dari Saga Orchestrator. Di sistem produksi tingkat tinggi, kita juga dapat mengimplementasikan kompensasi otomatis (*rollback request*) secara asinkronus jika salah satu gRPC mengalami kegagalan di pertengahan jalan.
+* **Saga Orchestration Pattern:** Logika transfer di atas adalah contoh nyata dari **Saga Orchestrator**. Karena kita tidak memiliki transaksi global terdistribusi (seperti 2PC/Two-Phase Commit yang berat dan memblokir database), kita memproses langkah demi langkah secara berurutan. Jika salah satu langkah gagal, kita wajib memanggil **Compensating Transactions** (transaksi kompensasi/pembatalan) untuk mengembalikan keadaan data di service lain ke posisi semula guna menjaga *eventual consistency*.
+* **Immutable Ledger Compensation:** Perhatikan bahwa kita tidak menghapus baris database ledger saat membatalkan transaksi, karena ledger bersifat *immutable* (tidak boleh didelete/update). Kita menulis entry jurnal baru yang berlawanan arah (misalnya mencatat CREDIT untuk menetralkan DEBIT yang keliru).
