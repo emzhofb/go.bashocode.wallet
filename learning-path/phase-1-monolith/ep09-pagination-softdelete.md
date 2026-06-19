@@ -252,6 +252,37 @@ func (h *TransactionHandler) GetHistory(c *gin.Context) {
 ### Step 4.5: Menambahkan Fitur Upload Avatar di User Domain
 Kita akan menambahkan fungsi untuk mengunggah dan memperbarui avatar pengguna. Gambar diunggah menggunakan format request `multipart/form-data` dan disimpan di server lokal.
 
+#### A. Membuat Database Migration untuk avatar_url
+Sebelum memodifikasi code, kita perlu menambahkan kolom `avatar_url` pada tabel `users`. 
+
+Jalankan perintah berikut di terminal root folder monolith untuk men-generate file migration baru:
+```bash
+migrate create -ext sql -dir db/migrations -seq add_avatar_url_to_users
+```
+
+Perintah di atas akan menghasilkan dua file di direktori `db/migrations/`. Isi masing-masing file tersebut dengan SQL berikut:
+
+**File: `000002_add_avatar_url_to_users.up.sql`**
+```sql
+ALTER TABLE users ADD COLUMN avatar_url VARCHAR(255) NULL AFTER password_hash;
+```
+
+**File: `000002_add_avatar_url_to_users.down.sql`**
+```sql
+ALTER TABLE users DROP COLUMN avatar_url;
+```
+
+Jalankan migrasi (UP) untuk menambahkan kolom:
+```bash
+migrate -path db/migrations -database "mysql://gowallet_user:gowallet_password@tcp(localhost:3306)/gowallet" up
+```
+
+Jika ingin membatalkan migrasi (DOWN):
+```bash
+migrate -path db/migrations -database "mysql://gowallet_user:gowallet_password@tcp(localhost:3306)/gowallet" down 1
+```
+
+#### B. Modifikasi Repository User
 Buka file `internal/user/repository/repository.go`. Tambahkan method `UpdateAvatar` ke interface dan implementasinya:
 ```go
 // Tambah di interface UserRepository:
