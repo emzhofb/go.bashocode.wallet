@@ -7,27 +7,27 @@
 
 ---
 
-## 🗺️ Peta Kurikulum (6 Fase, 44 Episode)
+## 🗺️ Peta Kurikulum (6 Fase, 45 Episode)
 
 Panduan ini dirancang untuk membimbing junior developer secara bertahap tanpa membuat mereka pusing dengan terlalu banyak teknologi di awal.
 
 ```
-       [ Fase 1: Monolith Dasar ] (Eps 1-11)
+       [ Fase 1: Monolith Dasar ] (Eps 1-12)
                  │  (Go + MySQL + Clean Arch + Swagger)
                  ▼
-     [ Fase 2: Cache & Background ] (Eps 12-18)
+     [ Fase 2: Cache & Background ] (Eps 13-19)
                  │  (Redis + OAuth2 + Token Rotation + RBAC)
                  ▼
-    [ Fase 3: Pemecahan Microservices ] (Eps 19-28)
+    [ Fase 3: Pemecahan Microservices ] (Eps 20-29)
                  │  (API Gateway + gRPC + Complete Service Decomposition + Scheduler)
                  ▼
-       [ Fase 4: Event-Driven ] (Eps 29-34)
+       [ Fase 4: Event-Driven ] (Eps 30-35)
                  │  (RabbitMQ + MongoDB Audit + Payment Service)
                  ▼
-     [ Fase 5: Resiliency, Config & Testing ] (Eps 35-42)
+     [ Fase 5: Resiliency, Config & Testing ] (Eps 36-43)
                  │  (Secrets + Postman + Integration Testing + Tracing + ELK)
                  ▼
-        [ Fase 6: DevOps & CI/CD ] (Eps 43-44)
+        [ Fase 6: DevOps & CI/CD ] (Eps 44-45)
                     (Docker Compose + GitHub Actions)
 ```
 
@@ -45,57 +45,57 @@ Fase ini fokus pada penguasaan dasar Go backend, relasi database, clean architec
 * [Episode 6: Wallet Management & Balance Check](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-1-monolith/ep06-wallet-creation.md)
 * [Episode 7: Double-Entry Ledger System (Introduction)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-1-monolith/ep07-ledger-system.md)
 * [Episode 8: Database Transactions & Optimistic Locking](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-1-monolith/ep08-db-tx-locking.md)
-* [Episode 9: Pagination, Sorting, & Soft Delete](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-1-monolith/ep09-pagination-softdelete.md)
-* [Episode 10: Unit Testing & Mocking](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-1-monolith/ep10-unit-testing.md)
-* [Episode 11: API Documentation dengan Swagger/OpenAPI](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-1-monolith/ep11-swagger-openapi.md)
+* [Episode10: Pagination, Sorting, & Soft Delete](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-1-monolith/ep11-pagination-softdelete.md)
+* [Episode11: Unit Testing & Mocking](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-1-monolith/ep12-unit-testing.md)
+* [Episode12: API Documentation dengan Swagger/OpenAPI](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-1-monolith/ep13-swagger-openapi.md)
 
 ### Fase 2: Caching & Background Processing
 Fase ini mengenalkan optimasi performa, pemrosesan latar belakang (background processing), dan security hardening pada autentikasi.
-* [Episode 12: Redis Caching](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-2-enhancing-monolith/ep12-redis-caching.md)
-* [Episode 13: Rate Limiting & JWT Blacklisting](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-2-enhancing-monolith/ep13-rate-limit-blacklist.md)
-* [Episode 14: Background Schedulers (Cron)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-2-enhancing-monolith/ep14-background-scheduler.md)
-* [Episode 15: Email Verification & Forgot Password](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-2-enhancing-monolith/ep15-email-verification.md)
-* [Episode 16: Integrasi Google OAuth](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-2-enhancing-monolith/ep16-google-oauth.md)
-* [Episode 17: Refresh Token Rotation & Token Reuse Detection](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-2-enhancing-monolith/ep17-refresh-token-rotation.md)
-* [Episode 18: Role-Based Access Control (RBAC)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-2-enhancing-monolith/ep18-rbac.md)
+* [Episode13: Redis Caching](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-2-enhancing-monolith/ep14-redis-caching.md)
+* [Episode14: Rate Limiting & JWT Blacklisting](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-2-enhancing-monolith/ep15-rate-limit-blacklist.md)
+* [Episode15: Background Schedulers (Cron)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-2-enhancing-monolith/ep16-background-scheduler.md)
+* [Episode16: Email Verification & Forgot Password](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-2-enhancing-monolith/ep17-email-verification.md)
+* [Episode17: Integrasi Google OAuth](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-2-enhancing-monolith/ep18-google-oauth.md)
+* [Episode18: Refresh Token Rotation & Token Reuse Detection](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-2-enhancing-monolith/ep19-refresh-token-rotation.md)
+* [Episode19: Role-Based Access Control (RBAC)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-2-enhancing-monolith/ep20-rbac.md)
 
 ### Fase 3: Pemecahan Microservices
 Fase ini mengajarkan bagaimana memecah monolith menjadi layanan-layanan independen yang berkomunikasi lewat jaringan gRPC secara terdekomposisi penuh.
-* [Episode 19: Monorepo & API Gateway (Reverse Proxy)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep19-monorepo-gateway.md)
-* [Episode 20: Memecah Auth Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep20-splitting-auth.md)
-* [Episode 21: Memecah User Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep21-splitting-user.md)
-* [Episode 22: Komunikasi Internal gRPC](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep22-grpc-communication.md)
-* [Episode 23: Memecah Wallet Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep23-splitting-wallet.md)
-* [Episode 24: Memecah Ledger Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep24-splitting-ledger.md)
-* [Episode 25: Memecah Transaction Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep25-splitting-transaction.md)
-* [Episode 26: gRPC Communication for Transfer Flow](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep26-grpc-transfer-flow.md)
-* [Episode 27: Memecah Scheduler Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep27-splitting-scheduler.md)
-* [Episode 28: Outbox Pattern untuk Transaksi Terdistribusi](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep28-outbox-pattern.md)
+* [Episode20: Monorepo & API Gateway (Reverse Proxy)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep21-monorepo-gateway.md)
+* [Episode21: Memecah Auth Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep22-splitting-auth.md)
+* [Episode22: Memecah User Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep23-splitting-user.md)
+* [Episode23: Komunikasi Internal gRPC](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep24-grpc-communication.md)
+* [Episode24: Memecah Wallet Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep25-splitting-wallet.md)
+* [Episode25: Memecah Ledger Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep26-splitting-ledger.md)
+* [Episode26: Memecah Transaction Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep27-splitting-transaction.md)
+* [Episode27: gRPC Communication for Transfer Flow](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep28-grpc-transfer-flow.md)
+* [Episode28: Memecah Scheduler Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep29-splitting-scheduler.md)
+* [Episode29: Outbox Pattern untuk Transaksi Terdistribusi](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-3-splitting-microservices/ep30-outbox-pattern.md)
 
 ### Fase 4: Event-Driven Communication
 Fase ini mengenalkan komunikasi asinkronus menggunakan message broker untuk skalabilitas yang lebih tinggi.
-* [Episode 29: RabbitMQ & Event Publishing](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep29-rabbitmq-publisher.md)
-* [Episode 30: Payment Service (External Integration & Webhook HMAC)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep30-payment-service.md)
-* [Episode 31: Consuming Payment Events in Wallet Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep31-consuming-payment-events.md)
-* [Episode 32: Notification Service (Consumer)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep32-notification-consumer.md)
-* [Episode 33: Audit Logging dengan MongoDB](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep33-audit-mongodb.md)
-* [Episode 34: RabbitMQ Resiliency (DLQ & Retries)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep34-rabbitmq-dlq-retries.md)
+* [Episode30: RabbitMQ & Event Publishing](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep31-rabbitmq-publisher.md)
+* [Episode31: Payment Service (External Integration & Webhook HMAC)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep32-payment-service.md)
+* [Episode32: Consuming Payment Events in Wallet Service](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep33-consuming-payment-events.md)
+* [Episode33: Notification Service (Consumer)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep34-notification-consumer.md)
+* [Episode34: Audit Logging dengan MongoDB](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep35-audit-mongodb.md)
+* [Episode35: RabbitMQ Resiliency (DLQ & Retries)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-4-event-driven/ep36-rabbitmq-dlq-retries.md)
 
 ### Fase 5: Resiliency, Config & Testing
 Fase ini mengajarkan cara mengkonfigurasi environment secara aman, membuat automation test suite, menulis integration test, serta meningkatkan ketahanan (*reliability*) dan pemantauan (*observability*).
-* [Episode 35: Secret Management & Multi-environment Config](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep35-multi-env-secrets.md)
-* [Episode 36: Postman Collection & API Test Automation](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep36-postman-test-automation.md)
-* [Episode 37: Integration & E2E Testing](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep37-integration-e2e-testing.md)
-* [Episode 38: Reliability Patterns (Circuit Breakers & Retries)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep38-reliability-patterns.md)
-* [Episode 39: Graceful Shutdown di Microservices](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep39-graceful-shutdown.md)
-* [Episode 40: Distributed Tracing (OpenTelemetry & Jaeger)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep40-opentelemetry-jaeger.md)
-* [Episode 41: Metrics Monitoring (Prometheus & Grafana)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep41-prometheus-grafana.md)
-* [Episode 42: Centralized Log Aggregation (ELK Stack)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep42-elk-stack.md)
+* [Episode36: Secret Management & Multi-environment Config](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep37-multi-env-secrets.md)
+* [Episode37: Postman Collection & API Test Automation](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep38-postman-test-automation.md)
+* [Episode38: Integration & E2E Testing](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep39-integration-e2e-testing.md)
+* [Episode39: Reliability Patterns (Circuit Breakers & Retries)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep40-reliability-patterns.md)
+* [Episode40: Graceful Shutdown di Microservices](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep41-graceful-shutdown.md)
+* [Episode41: Distributed Tracing (OpenTelemetry & Jaeger)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep42-opentelemetry-jaeger.md)
+* [Episode42: Metrics Monitoring (Prometheus & Grafana)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep43-prometheus-grafana.md)
+* [Episode43: Centralized Log Aggregation (ELK Stack)](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-5-resiliency-observability/ep44-elk-stack.md)
 
 ### Fase 6: DevOps & Automation
 Fase deployment standard industri.
-* [Episode 43: Containerizing all Microservices](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-6-devops-cicd/ep43-dockerization.md)
-* [Episode 44: CI/CD Pipeline dengan GitHub Actions](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-6-devops-cicd/ep44-github-actions.md)
+* [Episode44: Containerizing all Microservices](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-6-devops-cicd/ep45-dockerization.md)
+* [Episode45: CI/CD Pipeline dengan GitHub Actions](file:///Users/ikhda/Documents/coding/golang/wallet-microservice/learning-path/phase-6-devops-cicd/ep46-github-actions.md)
 
 ---
 
